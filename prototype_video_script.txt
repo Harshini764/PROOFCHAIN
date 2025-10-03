@@ -1,0 +1,80 @@
+**Professional Prototype Video Script for ROOFCHAIN - Blockchain Supply Chain System**
+
+**[Opening Scene: Fade in with futuristic blockchain animations, supply chain icons, and the ROOFCHAIN logo. Background music: Upbeat, tech-inspired track.]**
+
+**Narrator (Professional, confident voice):**  
+"Good day. Today, I'm excited to present ROOFCHAIN, an innovative blockchain-powered supply chain management system designed to revolutionize retail transparency and security. Developed for the Walmart Sparkathon, ROOFCHAIN ensures that every product journey—from manufacturing to delivery—is traceable, tamper-proof, and verifiable."
+
+**[Scene Transition: Animated overview of supply chain process with blockchain elements.]**
+
+**Narrator:**  
+"In today's complex global supply chains, maintaining authenticity and transparency is paramount. Counterfeit products, supply chain disruptions, and lack of visibility cost businesses billions annually. ROOFCHAIN addresses these challenges by leveraging blockchain technology to create an immutable, decentralized ledger of product data."
+
+**[Feature Overview Section: Visuals show each feature with on-screen text and icons.]**
+
+**Narrator:**  
+"Let me walk you through ROOFCHAIN's key features that make it a comprehensive solution for modern supply chain management.
+
+First, the Dashboard provides real-time insights into your entire supply chain ecosystem. Monitor total products, track items in transit, view delivery statuses, and maintain an authenticity rate—all presented with animated metrics for immediate understanding. The dashboard also highlights security alerts, ensuring you stay ahead of potential issues."
+
+**[Demo: Screen recording of Dashboard component, highlighting metrics and alerts.]**
+
+**Narrator:**  
+"As you can see, the dashboard displays critical KPIs like total products managed, items currently in transit, successful deliveries, and the overall authenticity verification rate. Any security concerns are flagged immediately, allowing for rapid response."
+
+**Narrator:**  
+"Next, Product Tracking enables end-to-end visibility of individual products. Users can search and monitor specific items throughout their lifecycle, from manufacturing to final delivery. This feature ensures complete traceability and helps identify bottlenecks or delays in the supply chain."
+
+**[Demo: Product Tracking interface, showing search functionality and product details.]**
+
+**Narrator:**  
+"The QR Scanner component adds convenience and speed to product verification. Stakeholders can quickly scan QR codes on products to instantly access blockchain-verified information, including authenticity status, origin details, and transaction history."
+
+**[Demo: QR Scanner in action, simulating a scan and displaying results.]**
+
+**Narrator:**  
+"ROOFCHAIN supports a Multi-Stakeholder ecosystem, allowing manufacturers, distributors, retailers, and consumers to collaborate seamlessly. The Stakeholder Panel provides role-based access, ensuring each participant sees relevant information while maintaining data security."
+
+**[Demo: Stakeholder Panel, showing different user roles and permissions.]**
+
+**Narrator:**  
+"At the heart of ROOFCHAIN is the Blockchain Log, which records every transaction and status change immutably. This transparent ledger prevents tampering and provides an auditable trail for compliance and dispute resolution."
+
+**[Demo: Blockchain Log displaying transaction history and hash verification.]**
+
+**Narrator:**  
+"Finally, Product Authentication uses advanced verification algorithms to confirm product legitimacy. This anti-counterfeit protection gives consumers and businesses confidence in the products they handle."
+
+**[Demo: Product Authentication process, showing verification steps.]**
+
+**[Benefits Section: Infographics highlighting key advantages.]**
+
+**Narrator:**  
+"The benefits of ROOFCHAIN are transformative:
+
+- **Transparency**: Every stakeholder has access to real-time, accurate data.
+- **Security**: Blockchain's cryptographic protection prevents data manipulation.
+- **Efficiency**: Automated tracking reduces manual processes and errors.
+- **Trust**: Verified authenticity builds consumer confidence and brand loyalty.
+- **Scalability**: The system grows with your business needs.
+
+ROOFCHAIN is more than a tool—it's a foundation for the future of retail supply chain management."
+
+**[Closing Scene: Call-to-action with contact information, fade out with ROOFCHAIN logo.]**
+
+**Narrator:**  
+"Thank you for exploring ROOFCHAIN. This prototype demonstrates the potential of blockchain in creating transparent, secure, and efficient supply chains. We're committed to advancing retail technology and welcome partnerships to bring this vision to market.
+
+For more information, visit our project repository or contact the development team."
+
+**[End of Script]**
+
+**Video Specifications:**
+- Duration: 3-4 minutes
+- Style: Professional, clean animations
+- Voiceover: Clear, authoritative narration
+- Background Music: Subtle, modern tech soundtrack
+- Visuals: High-quality screen recordings with smooth transitions
+- Call-to-Action: Include project links and contact details
+
+**Note:** Ensure all demonstrations use realistic sample data and highlight the user-friendly interface design.
