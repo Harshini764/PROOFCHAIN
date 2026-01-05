@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Shield, 
-  Search, 
-  CheckCircle, 
-  AlertTriangle, 
+import { toast } from 'sonner';
+import {
+  Shield,
+  Search,
+  CheckCircle,
+  AlertTriangle,
   Scan,
   Lock,
   Unlock,
@@ -36,6 +37,7 @@ export default function ProductAuth() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [authResult, setAuthResult] = useState<AuthenticationResult | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
   useEffect(() => {
     const loadedProducts = loadProductsFromStorage();
@@ -188,14 +190,28 @@ export default function ProductAuth() {
 
   const handleVerifyProduct = () => {
     if (!selectedProduct) return;
-    
+
     setIsVerifying(true);
-    
+
     // Simulate verification delay
     setTimeout(() => {
       const result = performAuthentication(selectedProduct);
       setAuthResult(result);
       setIsVerifying(false);
+    }, 2000);
+  };
+
+  const handleScanQR = () => {
+    if (products.length === 0) return;
+
+    setIsScanning(true);
+
+    // Simulate QR scanning delay
+    setTimeout(() => {
+      const randomProduct = products[Math.floor(Math.random() * products.length)];
+      setSearchQuery(randomProduct.id);
+      toast.success(`QR Code scanned: ${randomProduct.name}`);
+      setIsScanning(false);
     }, 2000);
   };
 
@@ -243,9 +259,13 @@ export default function ProductAuth() {
             <Button variant="outline">
               <Search className="h-4 w-4" />
             </Button>
-            <Button variant="outline">
-              <Scan className="h-4 w-4 mr-2" />
-              Scan QR
+            <Button
+              variant="outline"
+              onClick={handleScanQR}
+              disabled={isScanning}
+            >
+              <Scan className={`h-4 w-4 mr-2 ${isScanning ? 'animate-spin' : ''}`} />
+              {isScanning ? 'Scanning...' : 'Scan QR'}
             </Button>
           </div>
         </CardContent>

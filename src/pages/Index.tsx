@@ -20,6 +20,7 @@ import ProductTracking from '@/components/ProductTracking';
 import QRScanner from '@/components/QRScanner';
 import StakeholderPanel from '@/components/StakeholderPanel';
 import BlockchainLog from '@/components/BlockchainLog';
+import ClaimVerifier from '@/components/ClaimVerifier';
 import ProductAuth from '@/components/ProductAuth';
 
 export default function Index() {
@@ -37,6 +38,8 @@ export default function Index() {
         return <StakeholderPanel />;
       case 'blockchain':
         return <BlockchainLog />;
+      case 'claims':
+        return <ClaimVerifier />;
       case 'auth':
         return <ProductAuth />;
       default:
@@ -81,6 +84,7 @@ export default function Index() {
                 <Shield className="h-3 w-3 mr-1" />
                 Anti-Counterfeit
               </Badge>
+
             </div>
           </div>
         </div>
@@ -134,11 +138,11 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        {/* Navigation Tabs */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+        {/* Navigation Tabs - now a single horizontal row with overflow on small screens */}
+        <div className="flex gap-4 mb-8 overflow-x-auto py-2">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 ${
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl flex-1 min-w-[120px] max-w-[220px] transition-all duration-300 ${
               activeTab === 'dashboard'
                 ? 'bg-blue-500/20 text-blue-300 shadow-lg'
                 : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
@@ -150,7 +154,7 @@ export default function Index() {
 
           <button
             onClick={() => setActiveTab('tracking')}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 ${
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl flex-1 min-w-[120px] max-w-[220px] transition-all duration-300 ${
               activeTab === 'tracking'
                 ? 'bg-green-500/20 text-green-300 shadow-lg'
                 : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
@@ -162,7 +166,7 @@ export default function Index() {
 
           <button
             onClick={() => setActiveTab('scanner')}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 ${
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl flex-1 min-w-[120px] max-w-[220px] transition-all duration-300 ${
               activeTab === 'scanner'
                 ? 'bg-orange-500/20 text-orange-300 shadow-lg'
                 : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
@@ -174,7 +178,7 @@ export default function Index() {
 
           <button
             onClick={() => setActiveTab('stakeholders')}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 ${
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl flex-1 min-w-[120px] max-w-[220px] transition-all duration-300 ${
               activeTab === 'stakeholders'
                 ? 'bg-purple-500/20 text-purple-300 shadow-lg'
                 : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
@@ -186,7 +190,7 @@ export default function Index() {
 
           <button
             onClick={() => setActiveTab('blockchain')}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 ${
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl flex-1 min-w-[120px] max-w-[220px] transition-all duration-300 ${
               activeTab === 'blockchain'
                 ? 'bg-indigo-500/20 text-indigo-300 shadow-lg'
                 : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
@@ -197,8 +201,20 @@ export default function Index() {
           </button>
 
           <button
+            onClick={() => setActiveTab('claims')}
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl flex-1 min-w-[120px] max-w-[220px] transition-all duration-300 ${
+              activeTab === 'claims'
+                ? 'bg-amber-500/20 text-amber-300 shadow-lg'
+                : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            <FileText className="h-6 w-6" />
+            <span className="text-sm font-medium">Claim Verifier</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('auth')}
-            className={`flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-300 ${
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl flex-1 min-w-[120px] max-w-[220px] transition-all duration-300 ${
               activeTab === 'auth'
                 ? 'bg-red-500/20 text-red-300 shadow-lg'
                 : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
@@ -208,7 +224,6 @@ export default function Index() {
             <span className="text-sm font-medium">Authentication</span>
           </button>
         </div>
-
         {/* Content Area */}
         <div className="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-8">
           {renderContent()}

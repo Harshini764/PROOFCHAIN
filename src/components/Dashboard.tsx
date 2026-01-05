@@ -1,11 +1,268 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AnalyticsDashboard from './AnalyticsDashboard';
+import ProductAdd from './ProductAdd';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Truck, Package, Shield, AlertTriangle, CheckCircle, Clock, TrendingUp, Zap, Activity, Database } from 'lucide-react';
 import { Product, loadProductsFromStorage } from '@/lib/blockchain';
 import { useEffect, useState, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { getDocs, collection } from 'firebase/firestore';
+import { db, seedProducts } from '@/lib/firebase';
+
+// Hardcoded fake products data
+const hardcodedProducts: Product[] = [
+  {
+    id: 'fake-product-1',
+    name: 'Eco-Friendly Water Bottle',
+    category: 'Home & Garden',
+    manufacturer: 'GreenGoods Ltd',
+    batchNumber: 'BATCH_FAKE001',
+    manufacturingDate: '2023-10-01',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'in-transit',
+    currentLocation: 'Highway Route 5',
+    currentStock: 150,
+    events: [
+      {
+        id: 'event-fake-1',
+        productId: 'fake-product-1',
+        timestamp: Date.now() - 86400000,
+        location: 'Warehouse A',
+        status: 'warehoused',
+        stakeholder: 'Global Warehouse Solutions',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash1',
+        previousHash: '00000000',
+        data: { notes: 'Product stored safely.' }
+      },
+      {
+        id: 'event-fake-2',
+        productId: 'fake-product-1',
+        timestamp: Date.now() - 3600000,
+        location: 'Highway Route 5',
+        status: 'in-transit',
+        stakeholder: 'FastTrack Logistics',
+        stakeholderType: 'transporter',
+        hash: 'fakehash2',
+        previousHash: 'fakehash1',
+        data: { notes: 'En route to retailer.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-2',
+    name: 'Organic Coffee Beans',
+    category: 'Food & Beverage',
+    manufacturer: 'FreshFoods Inc',
+    batchNumber: 'BATCH_FAKE002',
+    manufacturingDate: '2023-09-15',
+    expiryDate: '2024-09-15',
+    authenticity: true,
+    currentStatus: 'delivered',
+    currentLocation: 'MegaMart Stores',
+    currentStock: 75,
+    events: [
+      {
+        id: 'event-fake-3',
+        productId: 'fake-product-2',
+        timestamp: Date.now() - 172800000,
+        location: 'Warehouse B',
+        status: 'warehoused',
+        stakeholder: 'Secure Storage Inc.',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash3',
+        previousHash: '00000000',
+        data: { notes: 'Quality checked and stored.' }
+      },
+      {
+        id: 'event-fake-4',
+        productId: 'fake-product-2',
+        timestamp: Date.now() - 7200000,
+        location: 'MegaMart Stores',
+        status: 'delivered',
+        stakeholder: 'Swift Delivery Services',
+        stakeholderType: 'transporter',
+        hash: 'fakehash4',
+        previousHash: 'fakehash3',
+        data: { notes: 'Delivered successfully.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-3',
+    name: 'Wireless Earbuds',
+    category: 'Electronics',
+    manufacturer: 'TechCorp',
+    batchNumber: 'BATCH_FAKE003',
+    manufacturingDate: '2023-08-20',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'manufactured',
+    currentLocation: 'Factory Alpha',
+    currentStock: 200,
+    events: [
+      {
+        id: 'event-fake-5',
+        productId: 'fake-product-3',
+        timestamp: Date.now() - 259200000,
+        location: 'Factory Alpha',
+        status: 'manufactured',
+        stakeholder: 'Tech Manufacturers Inc.',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash5',
+        previousHash: '00000000',
+        data: { notes: 'Batch produced and quality tested.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-4',
+    name: 'Smartphone Case',
+    category: 'Electronics',
+    manufacturer: 'TechCorp',
+    batchNumber: 'BATCH_FAKE004',
+    manufacturingDate: '2023-09-01',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'warehoused',
+    currentLocation: 'Central Warehouse',
+    currentStock: 300,
+    events: [
+      {
+        id: 'event-fake-6',
+        productId: 'fake-product-4',
+        timestamp: Date.now() - 604800000,
+        location: 'TechCorp Factory',
+        status: 'manufactured',
+        stakeholder: 'Tech Manufacturers Inc.',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash6',
+        previousHash: '00000000',
+        data: { notes: 'Produced and packaged.' }
+      },
+      {
+        id: 'event-fake-7',
+        productId: 'fake-product-4',
+        timestamp: Date.now() - 86400000,
+        location: 'Central Warehouse',
+        status: 'warehoused',
+        stakeholder: 'Global Warehouse Solutions',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash7',
+        previousHash: 'fakehash6',
+        data: { notes: 'Received and stored.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-5',
+    name: 'Vitamin C Tablets',
+    category: 'Pharmaceuticals',
+    manufacturer: 'PharmaSafe',
+    batchNumber: 'BATCH_FAKE005',
+    manufacturingDate: '2023-07-15',
+    expiryDate: '2025-07-15',
+    authenticity: true,
+    currentStatus: 'verified',
+    currentLocation: 'Pharmacy Outlet',
+    currentStock: 50,
+    events: [
+      {
+        id: 'event-fake-8',
+        productId: 'fake-product-5',
+        timestamp: Date.now() - 1209600000,
+        location: 'PharmaSafe Lab',
+        status: 'manufactured',
+        stakeholder: 'PharmaSafe',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash8',
+        previousHash: '00000000',
+        data: { notes: 'Manufactured and tested.' }
+      },
+      {
+        id: 'event-fake-9',
+        productId: 'fake-product-5',
+        timestamp: Date.now() - 86400000,
+        location: 'Pharmacy Outlet',
+        status: 'verified',
+        stakeholder: 'HealthMart Pharmacy',
+        stakeholderType: 'retailer',
+        hash: 'fakehash9',
+        previousHash: 'fakehash8',
+        data: { notes: 'Verified and sold.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-6',
+    name: 'Counterfeit Smartphone',
+    category: 'Electronics',
+    manufacturer: 'Unknown',
+    batchNumber: 'BATCH_FAKE006',
+    manufacturingDate: '2023-06-01',
+    expiryDate: undefined,
+    authenticity: false,
+    currentStatus: 'manufactured',
+    currentLocation: 'Unknown Warehouse',
+    currentStock: 10,
+    events: [
+      {
+        id: 'event-fake-10',
+        productId: 'fake-product-6',
+        timestamp: Date.now() - 2592000000,
+        location: 'Unknown Factory',
+        status: 'manufactured',
+        stakeholder: 'Unknown Manufacturer',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash10',
+        previousHash: '00000000',
+        data: { notes: 'Suspicious manufacturing.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-7',
+    name: 'Expired Milk',
+    category: 'Food & Beverage',
+    manufacturer: 'DairyCorp',
+    batchNumber: 'BATCH_FAKE007',
+    manufacturingDate: '2023-01-01',
+    expiryDate: '2023-12-31',
+    authenticity: false,
+    currentStatus: 'warehoused',
+    currentLocation: 'Expired Goods Warehouse',
+    currentStock: 5,
+    events: [
+      {
+        id: 'event-fake-11',
+        productId: 'fake-product-7',
+        timestamp: Date.now() - 31536000000,
+        location: 'DairyCorp Factory',
+        status: 'manufactured',
+        stakeholder: 'DairyCorp',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash11',
+        previousHash: '00000000',
+        data: { notes: 'Past expiry date.' }
+      },
+      {
+        id: 'event-fake-12',
+        productId: 'fake-product-7',
+        timestamp: Date.now() - 86400000,
+        location: 'Expired Goods Warehouse',
+        status: 'warehoused',
+        stakeholder: 'Expired Storage Inc.',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash12',
+        previousHash: 'fakehash11',
+        data: { notes: 'Stored despite expiry.' }
+      }
+    ]
+  }
+];
 
 export default function Dashboard() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -26,13 +283,68 @@ export default function Dashboard() {
   const [isVisible, setIsVisible] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
 
+  const loadProductsFromFirestore = async () => {
+    try {
+      let querySnapshot = await getDocs(collection(db, 'products'));
+      let productsData: Product[] = [];
+      querySnapshot.forEach((doc) => {
+        productsData.push(doc.data() as Product);
+      });
+
+      // If no products in Firestore, seed sample data
+      if (productsData.length === 0) {
+        await seedProducts();
+        // Reload after seeding
+        querySnapshot = await getDocs(collection(db, 'products'));
+        productsData = [];
+        querySnapshot.forEach((doc) => {
+          productsData.push(doc.data() as Product);
+        });
+        toast({
+          title: 'Sample Data Seeded',
+          description: 'Predefined products have been added to the database.',
+        });
+      }
+
+      const allProducts = [...productsData, ...hardcodedProducts];
+      setProducts(allProducts);
+      toast({
+        title: 'Dashboard Loaded',
+        description: 'Product data has been loaded from database.',
+      });
+    } catch (error) {
+      console.error('Error loading products:', error);
+      // Fallback to local storage
+      const loadedProducts = loadProductsFromStorage();
+      const allProducts = [...loadedProducts, ...hardcodedProducts];
+      setProducts(allProducts);
+      toast({
+        title: 'Dashboard Loaded',
+        description: 'Product data has been loaded from local storage.',
+      });
+    }
+  };
+
+  const handleSeedData = async () => {
+    try {
+      await seedProducts();
+      await loadProductsFromFirestore();
+      toast({
+        title: 'Data Seeded',
+        description: 'Sample products have been added to the database.',
+      });
+    } catch (error) {
+      console.error('Error seeding data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to seed data.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   useEffect(() => {
-    const loadedProducts = loadProductsFromStorage();
-    setProducts(loadedProducts);
-    toast({
-      title: 'Dashboard Loaded',
-      description: 'Product data has been loaded successfully.',
-    });
+    loadProductsFromFirestore();
   }, []);
 
   useEffect(() => {
@@ -116,6 +428,14 @@ export default function Dashboard() {
       <div className="space-y-8">
         {/* Analytics Dashboard Section */}
         <AnalyticsDashboard />
+        {/* Add Product Section */}
+        <div className="flex justify-end gap-4">
+          <Button onClick={handleSeedData} variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+            <Database className="h-4 w-4 mr-2" />
+            Seed Data
+          </Button>
+          <ProductAdd onProductAdded={loadProductsFromFirestore} />
+        </div>
       {/* Enhanced Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/15 transition-all duration-300 group hover:scale-105 shadow-lg hover:shadow-glow-blue">

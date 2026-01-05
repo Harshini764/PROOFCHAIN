@@ -32,6 +32,8 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { Product, SupplyChainEvent, loadProductsFromStorage } from '@/lib/blockchain';
+import { getDocs, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface StakeholderData {
   id: string;
@@ -47,6 +49,317 @@ interface StakeholderData {
   };
 }
 
+// Hardcoded random stakeholders data
+const hardcodedStakeholders: StakeholderData[] = [
+  {
+    id: 'hardcoded-warehouse-1',
+    name: 'Global Warehouse Solutions',
+    type: 'warehouse',
+    products: [],
+    totalEvents: 15,
+    recentActivity: [],
+    performance: { onTime: 92, quality: 88, compliance: 95 }
+  },
+  {
+    id: 'hardcoded-warehouse-2',
+    name: 'Secure Storage Inc.',
+    type: 'warehouse',
+    products: [],
+    totalEvents: 18,
+    recentActivity: [],
+    performance: { onTime: 89, quality: 91, compliance: 93 }
+  },
+  {
+    id: 'hardcoded-transporter-1',
+    name: 'FastTrack Logistics',
+    type: 'transporter',
+    products: [],
+    totalEvents: 20,
+    recentActivity: [],
+    performance: { onTime: 89, quality: 91, compliance: 87 }
+  },
+  {
+    id: 'hardcoded-transporter-2',
+    name: 'Swift Delivery Services',
+    type: 'transporter',
+    products: [],
+    totalEvents: 22,
+    recentActivity: [],
+    performance: { onTime: 94, quality: 89, compliance: 92 }
+  },
+  {
+    id: 'hardcoded-retailer-1',
+    name: 'MegaMart Stores',
+    type: 'retailer',
+    products: [],
+    totalEvents: 12,
+    recentActivity: [],
+    performance: { onTime: 94, quality: 96, compliance: 98 }
+  },
+  {
+    id: 'hardcoded-retailer-2',
+    name: 'Urban Marketplace',
+    type: 'retailer',
+    products: [],
+    totalEvents: 16,
+    recentActivity: [],
+    performance: { onTime: 91, quality: 93, compliance: 95 }
+  }
+];
+
+// Hardcoded fake products data
+const hardcodedProducts: Product[] = [
+  {
+    id: 'fake-product-1',
+    name: 'Eco-Friendly Water Bottle',
+    category: 'Home & Garden',
+    manufacturer: 'GreenGoods Ltd',
+    batchNumber: 'BATCH_FAKE001',
+    manufacturingDate: '2023-10-01',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'in-transit',
+    currentLocation: 'Highway Route 5',
+    currentStock: 150,
+    events: [
+      {
+        id: 'event-fake-1',
+        productId: 'fake-product-1',
+        timestamp: Date.now() - 86400000,
+        location: 'Warehouse A',
+        status: 'warehoused',
+        stakeholder: 'Global Warehouse Solutions',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash1',
+        previousHash: '00000000',
+        data: { notes: 'Product stored safely.' }
+      },
+      {
+        id: 'event-fake-2',
+        productId: 'fake-product-1',
+        timestamp: Date.now() - 3600000,
+        location: 'Highway Route 5',
+        status: 'in-transit',
+        stakeholder: 'FastTrack Logistics',
+        stakeholderType: 'transporter',
+        hash: 'fakehash2',
+        previousHash: 'fakehash1',
+        data: { notes: 'En route to retailer.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-2',
+    name: 'Organic Coffee Beans',
+    category: 'Food & Beverage',
+    manufacturer: 'FreshFoods Inc',
+    batchNumber: 'BATCH_FAKE002',
+    manufacturingDate: '2023-09-15',
+    expiryDate: '2024-09-15',
+    authenticity: true,
+    currentStatus: 'delivered',
+    currentLocation: 'MegaMart Stores',
+    currentStock: 75,
+    events: [
+      {
+        id: 'event-fake-3',
+        productId: 'fake-product-2',
+        timestamp: Date.now() - 172800000,
+        location: 'Warehouse B',
+        status: 'warehoused',
+        stakeholder: 'Secure Storage Inc.',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash3',
+        previousHash: '00000000',
+        data: { notes: 'Quality checked and stored.' }
+      },
+      {
+        id: 'event-fake-4',
+        productId: 'fake-product-2',
+        timestamp: Date.now() - 7200000,
+        location: 'MegaMart Stores',
+        status: 'delivered',
+        stakeholder: 'Swift Delivery Services',
+        stakeholderType: 'transporter',
+        hash: 'fakehash4',
+        previousHash: 'fakehash3',
+        data: { notes: 'Delivered successfully.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-3',
+    name: 'Wireless Earbuds',
+    category: 'Electronics',
+    manufacturer: 'TechCorp',
+    batchNumber: 'BATCH_FAKE003',
+    manufacturingDate: '2023-08-20',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'manufactured',
+    currentLocation: 'Factory Alpha',
+    currentStock: 200,
+    events: [
+      {
+        id: 'event-fake-5',
+        productId: 'fake-product-3',
+        timestamp: Date.now() - 259200000,
+        location: 'Factory Alpha',
+        status: 'manufactured',
+        stakeholder: 'Tech Manufacturers Inc.',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash5',
+        previousHash: '00000000',
+        data: { notes: 'Batch produced and quality tested.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-4',
+    name: 'Smartphone Case',
+    category: 'Electronics',
+    manufacturer: 'TechCorp',
+    batchNumber: 'BATCH_FAKE004',
+    manufacturingDate: '2023-09-01',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'warehoused',
+    currentLocation: 'Central Warehouse',
+    currentStock: 300,
+    events: [
+      {
+        id: 'event-fake-6',
+        productId: 'fake-product-4',
+        timestamp: Date.now() - 604800000,
+        location: 'TechCorp Factory',
+        status: 'manufactured',
+        stakeholder: 'Tech Manufacturers Inc.',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash6',
+        previousHash: '00000000',
+        data: { notes: 'Produced and packaged.' }
+      },
+      {
+        id: 'event-fake-7',
+        productId: 'fake-product-4',
+        timestamp: Date.now() - 86400000,
+        location: 'Central Warehouse',
+        status: 'warehoused',
+        stakeholder: 'Global Warehouse Solutions',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash7',
+        previousHash: 'fakehash6',
+        data: { notes: 'Received and stored.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-5',
+    name: 'Vitamin C Tablets',
+    category: 'Pharmaceuticals',
+    manufacturer: 'PharmaSafe',
+    batchNumber: 'BATCH_FAKE005',
+    manufacturingDate: '2023-07-15',
+    expiryDate: '2025-07-15',
+    authenticity: true,
+    currentStatus: 'verified',
+    currentLocation: 'Pharmacy Outlet',
+    currentStock: 50,
+    events: [
+      {
+        id: 'event-fake-8',
+        productId: 'fake-product-5',
+        timestamp: Date.now() - 1209600000,
+        location: 'PharmaSafe Lab',
+        status: 'manufactured',
+        stakeholder: 'PharmaSafe',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash8',
+        previousHash: '00000000',
+        data: { notes: 'Manufactured and tested.' }
+      },
+      {
+        id: 'event-fake-9',
+        productId: 'fake-product-5',
+        timestamp: Date.now() - 86400000,
+        location: 'Pharmacy Outlet',
+        status: 'verified',
+        stakeholder: 'HealthMart Pharmacy',
+        stakeholderType: 'retailer',
+        hash: 'fakehash9',
+        previousHash: 'fakehash8',
+        data: { notes: 'Verified and sold.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-6',
+    name: 'Counterfeit Smartphone',
+    category: 'Electronics',
+    manufacturer: 'Unknown',
+    batchNumber: 'BATCH_FAKE006',
+    manufacturingDate: '2023-06-01',
+    expiryDate: undefined,
+    authenticity: false,
+    currentStatus: 'manufactured',
+    currentLocation: 'Unknown Warehouse',
+    currentStock: 10,
+    events: [
+      {
+        id: 'event-fake-10',
+        productId: 'fake-product-6',
+        timestamp: Date.now() - 2592000000,
+        location: 'Unknown Factory',
+        status: 'manufactured',
+        stakeholder: 'Unknown Manufacturer',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash10',
+        previousHash: '00000000',
+        data: { notes: 'Suspicious manufacturing.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-7',
+    name: 'Expired Milk',
+    category: 'Food & Beverage',
+    manufacturer: 'DairyCorp',
+    batchNumber: 'BATCH_FAKE007',
+    manufacturingDate: '2023-01-01',
+    expiryDate: '2023-12-31',
+    authenticity: false,
+    currentStatus: 'warehoused',
+    currentLocation: 'Expired Goods Warehouse',
+    currentStock: 5,
+    events: [
+      {
+        id: 'event-fake-11',
+        productId: 'fake-product-7',
+        timestamp: Date.now() - 31536000000,
+        location: 'DairyCorp Factory',
+        status: 'manufactured',
+        stakeholder: 'DairyCorp',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash11',
+        previousHash: '00000000',
+        data: { notes: 'Past expiry date.' }
+      },
+      {
+        id: 'event-fake-12',
+        productId: 'fake-product-7',
+        timestamp: Date.now() - 86400000,
+        location: 'Expired Goods Warehouse',
+        status: 'warehoused',
+        stakeholder: 'Expired Storage Inc.',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash12',
+        previousHash: 'fakehash11',
+        data: { notes: 'Stored despite expiry.' }
+      }
+    ]
+  }
+];
+
 export default function StakeholderPanel() {
   const [products, setProducts] = useState<Product[]>([]);
   const [stakeholders, setStakeholders] = useState<StakeholderData[]>([]);
@@ -55,70 +368,149 @@ export default function StakeholderPanel() {
   const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    const loadedProducts = loadProductsFromStorage();
-    setProducts(loadedProducts);
-    
-    // Process stakeholder data
-    const stakeholderMap = new Map<string, StakeholderData>();
-    
-    loadedProducts.forEach(product => {
-      product.events.forEach(event => {
-        const key = `${event.stakeholder}_${event.stakeholderType}`;
-        
-        if (!stakeholderMap.has(key)) {
-          stakeholderMap.set(key, {
-            id: key,
-            name: event.stakeholder,
-            type: event.stakeholderType,
-            products: [],
-            totalEvents: 0,
-            recentActivity: [],
-            performance: {
-              onTime: 85 + Math.random() * 15, // Random performance metrics for demo
-              quality: 80 + Math.random() * 20,
-              compliance: 90 + Math.random() * 10
+    const loadProductsFromFirestore = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'products'));
+        const productsData: Product[] = [];
+        querySnapshot.forEach((doc) => {
+          productsData.push(doc.data() as Product);
+        });
+        const allProducts = [...productsData, ...hardcodedProducts];
+        setProducts(allProducts);
+
+        // Process stakeholder data
+        const stakeholderMap = new Map<string, StakeholderData>();
+
+        allProducts.forEach(product => {
+          product.events.forEach(event => {
+            const key = `${event.stakeholder}_${event.stakeholderType}`;
+
+            if (!stakeholderMap.has(key)) {
+              stakeholderMap.set(key, {
+                id: key,
+                name: event.stakeholder,
+                type: event.stakeholderType,
+                products: [],
+                totalEvents: 0,
+                recentActivity: [],
+                performance: {
+                  onTime: 85 + Math.random() * 15, // Random performance metrics for demo
+                  quality: 80 + Math.random() * 20,
+                  compliance: 90 + Math.random() * 10
+                }
+              });
+            }
+
+            const stakeholder = stakeholderMap.get(key)!;
+            stakeholder.totalEvents++;
+            stakeholder.recentActivity.push(event);
+
+            if (!stakeholder.products.find(p => p.id === product.id)) {
+              stakeholder.products.push(product);
             }
           });
-        }
-        
-        const stakeholder = stakeholderMap.get(key)!;
-        stakeholder.totalEvents++;
-        stakeholder.recentActivity.push(event);
-        
-        if (!stakeholder.products.find(p => p.id === product.id)) {
-          stakeholder.products.push(product);
-        }
-      });
-    });
-
-    // Add demo customers if none exist
-    const hasCustomers = Array.from(stakeholderMap.values()).some(s => s.type === 'customer');
-    if (!hasCustomers) {
-      for (let i = 1; i <= 3; i++) {
-        stakeholderMap.set(`Customer${i}_customer`, {
-          id: `Customer${i}_customer`,
-          name: `Customer ${i}`,
-          type: 'customer',
-          products: loadedProducts.filter((_, idx) => idx % 3 === (i - 1)),
-          totalEvents: Math.floor(Math.random() * 5) + 1,
-          recentActivity: [],
-          performance: {
-            onTime: 90,
-            quality: 95,
-            compliance: 100
-          }
         });
+
+        // Add demo customers if none exist
+        const hasCustomers = Array.from(stakeholderMap.values()).some(s => s.type === 'customer');
+        if (!hasCustomers) {
+          for (let i = 1; i <= 3; i++) {
+            stakeholderMap.set(`Customer${i}_customer`, {
+              id: `Customer${i}_customer`,
+              name: `Customer ${i}`,
+              type: 'customer',
+              products: allProducts.filter((_, idx) => idx % 3 === (i - 1)),
+              totalEvents: Math.floor(Math.random() * 5) + 1,
+              recentActivity: [],
+              performance: {
+                onTime: 90,
+                quality: 95,
+                compliance: 100
+              }
+            });
+          }
+        }
+
+        // Sort recent activity and limit to 5 items per stakeholder
+        stakeholderMap.forEach(stakeholder => {
+          stakeholder.recentActivity = stakeholder.recentActivity
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .slice(0, 5);
+        });
+
+        setStakeholders([...Array.from(stakeholderMap.values()), ...hardcodedStakeholders]);
+      } catch (error) {
+        console.error('Error loading products:', error);
+        // Fallback to local storage
+        const loadedProducts = loadProductsFromStorage();
+        const allProducts = [...loadedProducts, ...hardcodedProducts];
+        setProducts(allProducts);
+
+        // Process stakeholder data with fallback
+        const stakeholderMap = new Map<string, StakeholderData>();
+
+        allProducts.forEach(product => {
+          product.events.forEach(event => {
+            const key = `${event.stakeholder}_${event.stakeholderType}`;
+
+            if (!stakeholderMap.has(key)) {
+              stakeholderMap.set(key, {
+                id: key,
+                name: event.stakeholder,
+                type: event.stakeholderType,
+                products: [],
+                totalEvents: 0,
+                recentActivity: [],
+                performance: {
+                  onTime: 85 + Math.random() * 15,
+                  quality: 80 + Math.random() * 20,
+                  compliance: 90 + Math.random() * 10
+                }
+              });
+            }
+
+            const stakeholder = stakeholderMap.get(key)!;
+            stakeholder.totalEvents++;
+            stakeholder.recentActivity.push(event);
+
+            if (!stakeholder.products.find(p => p.id === product.id)) {
+              stakeholder.products.push(product);
+            }
+          });
+        });
+
+        // Add demo customers if none exist
+        const hasCustomers = Array.from(stakeholderMap.values()).some(s => s.type === 'customer');
+        if (!hasCustomers) {
+          for (let i = 1; i <= 3; i++) {
+            stakeholderMap.set(`Customer${i}_customer`, {
+              id: `Customer${i}_customer`,
+              name: `Customer ${i}`,
+              type: 'customer',
+              products: allProducts.filter((_, idx) => idx % 3 === (i - 1)),
+              totalEvents: Math.floor(Math.random() * 5) + 1,
+              recentActivity: [],
+              performance: {
+                onTime: 90,
+                quality: 95,
+                compliance: 100
+              }
+            });
+          }
+        }
+
+        // Sort recent activity and limit to 5 items per stakeholder
+        stakeholderMap.forEach(stakeholder => {
+          stakeholder.recentActivity = stakeholder.recentActivity
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .slice(0, 5);
+        });
+
+        setStakeholders([...Array.from(stakeholderMap.values()), ...hardcodedStakeholders]);
       }
-    }
-    
-    // Sort recent activity and limit to 5 items per stakeholder
-    stakeholderMap.forEach(stakeholder => {
-      stakeholder.recentActivity = stakeholder.recentActivity
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 5);
-    });
-    
-    setStakeholders(Array.from(stakeholderMap.values()));
+    };
+
+    loadProductsFromFirestore();
   }, []);
 
   const getStakeholderIcon = (type: SupplyChainEvent['stakeholderType']) => {

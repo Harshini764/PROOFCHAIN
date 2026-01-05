@@ -15,12 +15,291 @@ import {
   Database,
   Lock
 } from 'lucide-react';
-import { 
-  Product, 
-  SupplyChainEvent, 
-  loadProductsFromStorage, 
-  verifyBlockchainIntegrity 
+import {
+  Product,
+  SupplyChainEvent,
+  loadProductsFromStorage,
+  verifyBlockchainIntegrity
 } from '@/lib/blockchain';
+import { getDocs, collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+// Hardcoded fake products data
+const hardcodedProducts: Product[] = [
+  {
+    id: 'fake-product-1',
+    name: 'Eco-Friendly Water Bottle',
+    category: 'Home & Garden',
+    manufacturer: 'GreenGoods Ltd',
+    batchNumber: 'BATCH_FAKE001',
+    manufacturingDate: '2023-10-01',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'delivered',
+    currentLocation: 'MegaMart Stores',
+    currentStock: 150,
+    events: [
+      {
+        id: 'event-fake-1',
+        productId: 'fake-product-1',
+        timestamp: Date.now() - 86400000,
+        location: 'Warehouse A',
+        status: 'warehoused',
+        stakeholder: 'Global Warehouse Solutions',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash1',
+        previousHash: '00000000',
+        data: { notes: 'Product stored safely.' }
+      },
+      {
+        id: 'event-fake-2',
+        productId: 'fake-product-1',
+        timestamp: Date.now() - 3600000,
+        location: 'Highway Route 5',
+        status: 'in-transit',
+        stakeholder: 'FastTrack Logistics',
+        stakeholderType: 'transporter',
+        hash: 'fakehash2',
+        previousHash: 'fakehash1',
+        data: { notes: 'En route to retailer.' }
+      },
+      {
+        id: 'event-fake-13',
+        productId: 'fake-product-1',
+        timestamp: Date.now() - 1800000,
+        location: 'MegaMart Stores',
+        status: 'delivered',
+        stakeholder: 'MegaMart Stores',
+        stakeholderType: 'retailer',
+        hash: 'fakehash13',
+        previousHash: 'fakehash2',
+        data: { notes: 'Delivered to retailer.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-2',
+    name: 'Organic Coffee Beans',
+    category: 'Food & Beverage',
+    manufacturer: 'FreshFoods Inc',
+    batchNumber: 'BATCH_FAKE002',
+    manufacturingDate: '2023-09-15',
+    expiryDate: '2024-09-15',
+    authenticity: true,
+    currentStatus: 'verified',
+    currentLocation: 'MegaMart Stores',
+    currentStock: 75,
+    events: [
+      {
+        id: 'event-fake-3',
+        productId: 'fake-product-2',
+        timestamp: Date.now() - 172800000,
+        location: 'Warehouse B',
+        status: 'warehoused',
+        stakeholder: 'Secure Storage Inc.',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash3',
+        previousHash: '00000000',
+        data: { notes: 'Quality checked and stored.' }
+      },
+      {
+        id: 'event-fake-4',
+        productId: 'fake-product-2',
+        timestamp: Date.now() - 7200000,
+        location: 'MegaMart Stores',
+        status: 'delivered',
+        stakeholder: 'Swift Delivery Services',
+        stakeholderType: 'transporter',
+        hash: 'fakehash4',
+        previousHash: 'fakehash3',
+        data: { notes: 'Delivered successfully.' }
+      },
+      {
+        id: 'event-fake-14',
+        productId: 'fake-product-2',
+        timestamp: Date.now() - 3600000,
+        location: 'MegaMart Stores',
+        status: 'verified',
+        stakeholder: 'HealthMart Pharmacy',
+        stakeholderType: 'retailer',
+        hash: 'fakehash14',
+        previousHash: 'fakehash4',
+        data: { notes: 'Verified by retailer.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-3',
+    name: 'Wireless Earbuds',
+    category: 'Electronics',
+    manufacturer: 'TechCorp',
+    batchNumber: 'BATCH_FAKE003',
+    manufacturingDate: '2023-08-20',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'manufactured',
+    currentLocation: 'Factory Alpha',
+    currentStock: 200,
+    events: [
+      {
+        id: 'event-fake-5',
+        productId: 'fake-product-3',
+        timestamp: Date.now() - 259200000,
+        location: 'Factory Alpha',
+        status: 'manufactured',
+        stakeholder: 'Tech Manufacturers Inc.',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash5',
+        previousHash: '00000000',
+        data: { notes: 'Batch produced and quality tested.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-4',
+    name: 'Smartphone Case',
+    category: 'Electronics',
+    manufacturer: 'TechCorp',
+    batchNumber: 'BATCH_FAKE004',
+    manufacturingDate: '2023-09-01',
+    expiryDate: undefined,
+    authenticity: true,
+    currentStatus: 'warehoused',
+    currentLocation: 'Central Warehouse',
+    currentStock: 300,
+    events: [
+      {
+        id: 'event-fake-6',
+        productId: 'fake-product-4',
+        timestamp: Date.now() - 604800000,
+        location: 'TechCorp Factory',
+        status: 'manufactured',
+        stakeholder: 'Tech Manufacturers Inc.',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash6',
+        previousHash: '00000000',
+        data: { notes: 'Produced and packaged.' }
+      },
+      {
+        id: 'event-fake-7',
+        productId: 'fake-product-4',
+        timestamp: Date.now() - 86400000,
+        location: 'Central Warehouse',
+        status: 'warehoused',
+        stakeholder: 'Global Warehouse Solutions',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash7',
+        previousHash: 'fakehash6',
+        data: { notes: 'Received and stored.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-5',
+    name: 'Vitamin C Tablets',
+    category: 'Pharmaceuticals',
+    manufacturer: 'PharmaSafe',
+    batchNumber: 'BATCH_FAKE005',
+    manufacturingDate: '2023-07-15',
+    expiryDate: '2025-07-15',
+    authenticity: true,
+    currentStatus: 'verified',
+    currentLocation: 'Pharmacy Outlet',
+    currentStock: 50,
+    events: [
+      {
+        id: 'event-fake-8',
+        productId: 'fake-product-5',
+        timestamp: Date.now() - 1209600000,
+        location: 'PharmaSafe Lab',
+        status: 'manufactured',
+        stakeholder: 'PharmaSafe',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash8',
+        previousHash: '00000000',
+        data: { notes: 'Manufactured and tested.' }
+      },
+      {
+        id: 'event-fake-9',
+        productId: 'fake-product-5',
+        timestamp: Date.now() - 86400000,
+        location: 'Pharmacy Outlet',
+        status: 'verified',
+        stakeholder: 'HealthMart Pharmacy',
+        stakeholderType: 'retailer',
+        hash: 'fakehash9',
+        previousHash: 'fakehash8',
+        data: { notes: 'Verified and sold.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-6',
+    name: 'Counterfeit Smartphone',
+    category: 'Electronics',
+    manufacturer: 'Unknown',
+    batchNumber: 'BATCH_FAKE006',
+    manufacturingDate: '2023-06-01',
+    expiryDate: undefined,
+    authenticity: false,
+    currentStatus: 'manufactured',
+    currentLocation: 'Unknown Warehouse',
+    currentStock: 10,
+    events: [
+      {
+        id: 'event-fake-10',
+        productId: 'fake-product-6',
+        timestamp: Date.now() - 2592000000,
+        location: 'Unknown Factory',
+        status: 'manufactured',
+        stakeholder: 'Unknown Manufacturer',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash10',
+        previousHash: '00000000',
+        data: { notes: 'Suspicious manufacturing.' }
+      }
+    ]
+  },
+  {
+    id: 'fake-product-7',
+    name: 'Expired Milk',
+    category: 'Food & Beverage',
+    manufacturer: 'DairyCorp',
+    batchNumber: 'BATCH_FAKE007',
+    manufacturingDate: '2023-01-01',
+    expiryDate: '2023-12-31',
+    authenticity: false,
+    currentStatus: 'warehoused',
+    currentLocation: 'Expired Goods Warehouse',
+    currentStock: 5,
+    events: [
+      {
+        id: 'event-fake-11',
+        productId: 'fake-product-7',
+        timestamp: Date.now() - 31536000000,
+        location: 'DairyCorp Factory',
+        status: 'manufactured',
+        stakeholder: 'DairyCorp',
+        stakeholderType: 'manufacturer',
+        hash: 'fakehash11',
+        previousHash: '00000000',
+        data: { notes: 'Past expiry date.' }
+      },
+      {
+        id: 'event-fake-12',
+        productId: 'fake-product-7',
+        timestamp: Date.now() - 86400000,
+        location: 'Expired Goods Warehouse',
+        status: 'warehoused',
+        stakeholder: 'Expired Storage Inc.',
+        stakeholderType: 'warehouse',
+        hash: 'fakehash12',
+        previousHash: 'fakehash11',
+        data: { notes: 'Stored despite expiry.' }
+      }
+    ]
+  }
+];
 
 interface BlockchainBlock {
   blockNumber: number;
@@ -39,49 +318,106 @@ export default function BlockchainLog() {
   const [overallIntegrity, setOverallIntegrity] = useState(true);
 
   useEffect(() => {
-    const loadedProducts = loadProductsFromStorage();
-    setProducts(loadedProducts);
-    
-    // Create blockchain blocks from events
-    const allEvents: SupplyChainEvent[] = [];
-    loadedProducts.forEach(product => {
-      allEvents.push(...product.events);
-    });
-    
-    // Sort events by timestamp
-    allEvents.sort((a, b) => a.timestamp - b.timestamp);
-    
-    // Group events into blocks (simulate blockchain structure)
-    const blockSize = 5; // Events per block
-    const createdBlocks: BlockchainBlock[] = [];
-    
-    for (let i = 0; i < allEvents.length; i += blockSize) {
-      const blockEvents = allEvents.slice(i, i + blockSize);
-      const blockNumber = Math.floor(i / blockSize) + 1;
-      
-      // Generate block hash based on events
-      const blockData = JSON.stringify(blockEvents.map(e => e.hash));
-      const previousBlockHash = createdBlocks.length > 0 ? createdBlocks[createdBlocks.length - 1].blockHash : '0000000000000000';
-      const blockHash = generateBlockHash(blockData + previousBlockHash);
-      
-      // Verify block integrity
-      const isValid = blockEvents.every(event => {
-        const productEvents = loadedProducts.find(p => p.id === event.productId)?.events || [];
-        return verifyBlockchainIntegrity(productEvents);
-      });
-      
-      createdBlocks.push({
-        blockNumber,
-        events: blockEvents,
-        blockHash,
-        previousBlockHash,
-        timestamp: blockEvents[0]?.timestamp || Date.now(),
-        isValid
-      });
-    }
-    
-    setBlocks(createdBlocks);
-    setOverallIntegrity(createdBlocks.every(block => block.isValid));
+    const loadProductsFromFirestore = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'products'));
+        const productsData: Product[] = [];
+        querySnapshot.forEach((doc) => {
+          productsData.push(doc.data() as Product);
+        });
+        const allProducts = [...productsData, ...hardcodedProducts];
+        setProducts(allProducts);
+
+        // Create blockchain blocks from events
+        const allEvents: SupplyChainEvent[] = [];
+        allProducts.forEach(product => {
+          allEvents.push(...product.events);
+        });
+
+        // Sort events by timestamp
+        allEvents.sort((a, b) => a.timestamp - b.timestamp);
+
+        // Group events into blocks (simulate blockchain structure)
+        const blockSize = 5; // Events per block
+        const createdBlocks: BlockchainBlock[] = [];
+
+        for (let i = 0; i < allEvents.length; i += blockSize) {
+          const blockEvents = allEvents.slice(i, i + blockSize);
+          const blockNumber = Math.floor(i / blockSize) + 1;
+
+          // Generate block hash based on events
+          const blockData = JSON.stringify(blockEvents.map(e => e.hash));
+          const previousBlockHash = createdBlocks.length > 0 ? createdBlocks[createdBlocks.length - 1].blockHash : '0000000000000000';
+          const blockHash = generateBlockHash(blockData + previousBlockHash);
+
+          // Verify block integrity
+          const isValid = blockEvents.every(event => {
+            const productEvents = allProducts.find(p => p.id === event.productId)?.events || [];
+            return verifyBlockchainIntegrity(productEvents);
+          });
+
+          createdBlocks.push({
+            blockNumber,
+            events: blockEvents,
+            blockHash,
+            previousBlockHash,
+            timestamp: blockEvents[0]?.timestamp || Date.now(),
+            isValid
+          });
+        }
+
+        setBlocks(createdBlocks);
+        setOverallIntegrity(createdBlocks.every(block => block.isValid));
+      } catch (error) {
+        console.error('Error loading products:', error);
+        // Fallback to local storage
+        const loadedProducts = loadProductsFromStorage();
+        setProducts(loadedProducts);
+
+        // Create blockchain blocks from events
+        const allEvents: SupplyChainEvent[] = [];
+        loadedProducts.forEach(product => {
+          allEvents.push(...product.events);
+        });
+
+        // Sort events by timestamp
+        allEvents.sort((a, b) => a.timestamp - b.timestamp);
+
+        // Group events into blocks (simulate blockchain structure)
+        const blockSize = 5; // Events per block
+        const createdBlocks: BlockchainBlock[] = [];
+
+        for (let i = 0; i < allEvents.length; i += blockSize) {
+          const blockEvents = allEvents.slice(i, i + blockSize);
+          const blockNumber = Math.floor(i / blockSize) + 1;
+
+          // Generate block hash based on events
+          const blockData = JSON.stringify(blockEvents.map(e => e.hash));
+          const previousBlockHash = createdBlocks.length > 0 ? createdBlocks[createdBlocks.length - 1].blockHash : '0000000000000000';
+          const blockHash = generateBlockHash(blockData + previousBlockHash);
+
+          // Verify block integrity
+          const isValid = blockEvents.every(event => {
+            const productEvents = loadedProducts.find(p => p.id === event.productId)?.events || [];
+            return verifyBlockchainIntegrity(productEvents);
+          });
+
+          createdBlocks.push({
+            blockNumber,
+            events: blockEvents,
+            blockHash,
+            previousBlockHash,
+            timestamp: blockEvents[0]?.timestamp || Date.now(),
+            isValid
+          });
+        }
+
+        setBlocks(createdBlocks);
+        setOverallIntegrity(createdBlocks.every(block => block.isValid));
+      }
+    };
+
+    loadProductsFromFirestore();
   }, []);
 
   const generateBlockHash = (data: string): string => {
