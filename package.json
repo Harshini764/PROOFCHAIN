@@ -4,7 +4,7 @@
   "packageManager": "pnpm@8.10.0",
   "scripts": {
     "dev": "vite",
-    "build": "pnpm install --no-frozen-lockfile --yes && vite build",
+    "build": "vite build",
     "lint": "eslint ./src || true",
     "preview": "vite preview"
   },
