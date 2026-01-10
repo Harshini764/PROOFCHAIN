@@ -3,13 +3,13 @@ import { getFirestore, collection, addDoc, getDocs } from 'firebase/firestore';
 import { getAuth, setPersistence, browserSessionPersistence } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAc1wIYarzAaW2gD92VevQauA-0OYlzLJo",
-  authDomain: "proofchain-80ddf.firebaseapp.com",
-  projectId: "proofchain-80ddf",
-  storageBucket: "proofchain-80ddf.firebasestorage.app",
-  messagingSenderId: "326531306972",
-  appId: "1:326531306972:web:c4a62204817e179056eb19",
-  measurementId: "G-5C2QQVJGMF"
+  apiKey: ,
+  authDomain: ,
+  projectId: ,
+  storageBucket: ,
+  messagingSenderId: ,
+  appId: ,
+  measurementId: 
 };
 
 const app = initializeApp(firebaseConfig);
